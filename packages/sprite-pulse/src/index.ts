@@ -1,4 +1,4 @@
-export type { RenderOptions, SpriteShaderCacheEntry } from "./types";
+export type { RenderOptions, SpritePulseLayer, SpriteShaderCacheEntry } from "./types";
 export type {
 	SpriteFlipAxis,
 	SpritePulseAtlasAssetSource,

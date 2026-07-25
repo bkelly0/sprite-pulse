@@ -4,7 +4,6 @@ import {
   createRenderTarget,
   createTextureFromImage
 } from "../gl";
-import { Matrix3 } from "../math";
 import {
   Camera,
   Sprite,
@@ -16,29 +15,38 @@ import { resolveSpriteUvRect } from "./uv";
 import { loadImage } from "../utils";
 import { Rect } from "../geometry";
 import type { RenderTarget } from "./types";
-import type { RenderOptions, SpriteShaderCacheEntry } from "../types";
+import type {
+  RenderOptions,
+  SpritePulseLayer,
+  SpriteShaderCacheEntry
+} from "../types";
+
+type NormalizedRenderLayer = {
+  sprites: Sprite[];
+  parallax: number;
+};
 
 export class SpritePulse {
   public readonly canvas: HTMLCanvasElement;
   public readonly gl: WebGL2RenderingContext;
   public readonly shaderCache = new Map<string, SpriteShaderCacheEntry>();
   public readonly ready: Promise<void>;
-  public readonly camera: Camera | null = null;
+  public readonly camera: Camera | null;
   private readonly quadVao: WebGLVertexArrayObject;
   private readonly quadBuffer: WebGLBuffer;
   private readonly spriteProgram: WebGLProgram;
   private readonly spriteTextureUniformLocation: WebGLUniformLocation;
   private readonly spriteUvRectUniformLocation: WebGLUniformLocation;
   private renderTarget: RenderTarget | null;
-  private cameraMatrixLocation: WebGLUniformLocation | null = null;
-  private projectionMatrixLocation: WebGLUniformLocation | null = null;
   private isDisposed = false;
 
   constructor(
     canvas: HTMLCanvasElement,
-    assets: SpriteSheetBundleSource[]
+    assets: SpriteSheetBundleSource[],
+    camera: Camera | null = null
   ) {
     this.canvas = canvas;
+    this.camera = camera;
 
     const gl = canvas.getContext("webgl2");
     if (!gl) {
@@ -74,17 +82,6 @@ export class SpritePulse {
     gl.deleteShader(sharedShader.fragmentShader);
     this.renderTarget = null;
 
-    if (this.camera != null) {
-      this.cameraMatrixLocation = gl.getUniformLocation(
-        this.spriteProgram,
-        "u_cameraMatrix"
-      );
-      this.projectionMatrixLocation = gl.getUniformLocation(
-        this.spriteProgram,
-        "u_projectionMatrix"
-      );
-    }
-
     this.ready = this.initialize(assets);
   }
 
@@ -96,17 +93,33 @@ export class SpritePulse {
     return this.shaderCache.get(filename);
   }
 
+  public getSpriteRenderRect(sprite: Sprite, parallax: number = 1): Rect {
+    const cameraX = this.camera?.x ?? 0;
+    const cameraY = this.camera?.y ?? 0;
+    const safeParallax = this.clampParallax(parallax);
+    const cameraOffsetX = cameraX * safeParallax;
+    const cameraOffsetY = cameraY * safeParallax;
+
+    return new Rect(
+      sprite.x - cameraOffsetX,
+      sprite.y - cameraOffsetY,
+      sprite.width,
+      sprite.height
+    );
+  }
+
   public render(sprites: Sprite[], options?: RenderOptions): void;
   public render(layers: Sprite[][], options?: RenderOptions): void;
+  public render(layers: SpritePulseLayer[], options?: RenderOptions): void;
   public render(
-    spritesOrLayers: Sprite[] | Sprite[][],
+    spritesOrLayers: Sprite[] | Sprite[][] | SpritePulseLayer[],
     options: RenderOptions = {}
   ): void {
     if (this.isDisposed) {
       return;
     }
 
-    const sprites = this.flattenRenderInput(spritesOrLayers);
+    const layers = this.normalizeRenderInput(spritesOrLayers);
 
     const clearColor = options.clearColor ?? [0, 0, 0, 0];
     const useOffscreenBuffer = options.useOffscreenBuffer ?? false;
@@ -129,24 +142,7 @@ export class SpritePulse {
       );
       this.gl.clear(this.gl.COLOR_BUFFER_BIT);
 
-      if (this.camera != null) {
-        if (this.cameraMatrixLocation) {
-          this.gl.uniformMatrix3fv(
-            this.cameraMatrixLocation,
-            false,
-            this.camera.getViewMatrix()
-          );
-        }
-        if (this.projectionMatrixLocation) {
-          this.gl.uniformMatrix3fv(
-            this.projectionMatrixLocation,
-            false,
-            Matrix3.projection(this.canvas.width, this.canvas.height)
-          );
-        }
-      }
-
-      this.drawSpritesToCurrentBuffer(sprites, target.height);
+      this.drawSpritesToCurrentBuffer(layers, target.height);
       this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, null);
       this.compositeTextureToCanvas(target.texture, clearColor);
       return;
@@ -156,31 +152,43 @@ export class SpritePulse {
     this.gl.viewport(0, 0, this.canvas.width, this.canvas.height);
     this.gl.clearColor(clearColor[0], clearColor[1], clearColor[2], clearColor[3]);
     this.gl.clear(this.gl.COLOR_BUFFER_BIT);
-    this.drawSpritesToCurrentBuffer(sprites, this.canvas.height);
+    this.drawSpritesToCurrentBuffer(layers, this.canvas.height);
   }
 
   public renderSprite(sprite: Sprite): void {
     this.render([sprite]);
   }
 
-  private flattenRenderInput(spritesOrLayers: Sprite[] | Sprite[][]): Sprite[] {
+  private normalizeRenderInput(
+    spritesOrLayers: Sprite[] | Sprite[][] | SpritePulseLayer[]
+  ): NormalizedRenderLayer[] {
     if (spritesOrLayers.length === 0) {
       return [];
     }
 
-    if (Array.isArray(spritesOrLayers[0])) {
-      const layers = spritesOrLayers as Sprite[][];
-      const flattened: Sprite[] = [];
-      for (const layer of layers) {
-        flattened.push(...layer);
-      }
-      return flattened;
+    const firstItem = spritesOrLayers[0];
+
+    if (firstItem instanceof Sprite) {
+      return [{ sprites: spritesOrLayers as Sprite[], parallax: 1 }];
     }
 
-    return spritesOrLayers as Sprite[];
+    if (Array.isArray(firstItem)) {
+      return (spritesOrLayers as Sprite[][]).map((sprites) => ({
+        sprites,
+        parallax: 1
+      }));
+    }
+
+    return (spritesOrLayers as SpritePulseLayer[]).map((layer) => ({
+      sprites: layer.sprites,
+      parallax: this.clampParallax(layer.parallax ?? 1)
+    }));
   }
 
-  private drawSpritesToCurrentBuffer(sprites: Sprite[], targetHeight: number): void {
+  private drawSpritesToCurrentBuffer(
+    layers: NormalizedRenderLayer[],
+    targetHeight: number
+  ): void {
     this.gl.enable(this.gl.BLEND);
     this.gl.blendFunc(this.gl.SRC_ALPHA, this.gl.ONE_MINUS_SRC_ALPHA);
     this.gl.useProgram(this.spriteProgram);
@@ -188,40 +196,53 @@ export class SpritePulse {
     this.gl.activeTexture(this.gl.TEXTURE0);
     this.gl.uniform1i(this.spriteTextureUniformLocation, 0);
 
-    for (const sprite of sprites) {
-      if (isSpriteOutsideViewport(sprite, this.canvas.width, targetHeight)) {
-        continue;
-      }
+    for (const layer of layers) {
+      for (const sprite of layer.sprites) {
+        const renderRect = this.getSpriteRenderRect(sprite, layer.parallax);
 
-      const entry = this.shaderCache.get(sprite.shaderRef);
-      if (!entry) {
-        throw new Error(
-          `No cached shader found for filename "${sprite.shaderRef}".`
+        if (
+          renderRect.x + renderRect.width <= 0 ||
+          renderRect.y + renderRect.height <= 0 ||
+          renderRect.x >= this.canvas.width ||
+          renderRect.y >= targetHeight
+        ) {
+          continue;
+        }
+
+        const entry = this.shaderCache.get(sprite.shaderRef);
+        if (!entry) {
+          throw new Error(
+            `No cached shader found for filename "${sprite.shaderRef}".`
+          );
+        }
+
+        const viewportX = Math.round(renderRect.x);
+        const viewportY = Math.round(targetHeight - renderRect.y - renderRect.height);
+        const viewportWidth = Math.max(1, Math.round(renderRect.width));
+        const viewportHeight = Math.max(1, Math.round(renderRect.height));
+
+        this.gl.viewport(viewportX, viewportY, viewportWidth, viewportHeight);
+        this.gl.bindTexture(this.gl.TEXTURE_2D, entry.texture);
+        const uvRect = resolveSpriteUvRect(sprite, entry.width, entry.height);
+        this.gl.uniform4f(
+          this.spriteUvRectUniformLocation,
+          uvRect.x,
+          uvRect.y,
+          uvRect.width,
+          uvRect.height
         );
+        this.gl.drawArrays(this.gl.TRIANGLES, 0, 6);
       }
-
-      const viewportX = Math.round(sprite.x);
-      const viewportY = Math.round(targetHeight - sprite.y - sprite.height);
-      const viewportWidth = Math.max(1, Math.round(sprite.width));
-      const viewportHeight = Math.max(1, Math.round(sprite.height));
-
-      this.gl.viewport(viewportX, viewportY, viewportWidth, viewportHeight);
-      this.gl.bindTexture(this.gl.TEXTURE_2D, entry.texture);
-      const uvRect = resolveSpriteUvRect(sprite, entry.width, entry.height);
-      this.gl.uniform4f(
-        this.spriteUvRectUniformLocation,
-        uvRect.x,
-        uvRect.y,
-        uvRect.width,
-        uvRect.height
-      );
-      this.gl.drawArrays(this.gl.TRIANGLES, 0, 6);
     }
 
     this.gl.bindTexture(this.gl.TEXTURE_2D, null);
     this.gl.bindVertexArray(null);
     this.gl.useProgram(null);
     this.gl.disable(this.gl.BLEND);
+  }
+
+  private clampParallax(parallax: number): number {
+    return Math.max(0, Math.min(1, parallax));
   }
 
   private compositeTextureToCanvas(

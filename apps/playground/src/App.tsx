@@ -2,10 +2,11 @@ import { useState } from "react";
 import { BenchmarkDemoPage } from "./pages/BenchmarkDemoPage";
 import { ParticlesDemoPage } from "./pages/ParticlesDemoPage";
 import { SpriteSheetDemoPage } from "./pages/SpriteSheetDemoPage";
+import { ScrollingDemoPage } from "./pages/ScrollingDemoPage";
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<
-    "particles" | "sprite-sheets" | "benchmark"
+    "particles" | "sprite-sheets" | "benchmark" | "scrolling"
   >("particles");
 
   return (
@@ -27,6 +28,13 @@ export default function App() {
         </button>
         <button
           type="button"
+          className={activeTab === "scrolling" ? "tab active" : "tab"}
+          onClick={() => setActiveTab("scrolling")}
+        >
+          SpritePulse Demo: Scrolling and Parallax
+        </button>
+        <button
+          type="button"
           className={activeTab === "benchmark" ? "tab active" : "tab"}
           onClick={() => setActiveTab("benchmark")}
         >
@@ -40,6 +48,11 @@ export default function App() {
         <SpriteSheetDemoPage
           key="sprite-sheets"
           title="SpritePulse Demo: Sprite Sheets"
+        />
+      ) : activeTab === "scrolling" ? (
+        <ScrollingDemoPage
+          key="scrolling"
+          title="SpritePulse Demo: Scrolling and Parallax"
         />
       ) : (
         <BenchmarkDemoPage

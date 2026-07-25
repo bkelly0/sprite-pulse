@@ -33,7 +33,7 @@ steps:
       - "0"
       - --max-instances
       - "1"
-      - "port"
+      - "--port"
       - "80"
 
 images:
