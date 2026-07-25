@@ -13,7 +13,7 @@ RUN npm ci
 
 # Copy source and build only the playground workspace.
 COPY . .
-RUN npm run build -w playground
+RUN npm run build -w sprite-pulse && npm run build -w playground
 
 FROM nginx:1.27-alpine AS runtime
 
