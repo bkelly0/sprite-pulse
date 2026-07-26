@@ -66,6 +66,22 @@ canvas {
   background: #000;
 }
 
+.concurrency-canvas-grid {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fill, 400px);
+  justify-content: start;
+  align-items: start;
+}
+
+.concurrency-canvas-grid > div {
+  width: 400px;
+}
+
+.concurrency-canvas-grid canvas {
+  display: block;
+}
+
 .benchmark-controls {
   display: flex;
   gap: 0.5rem;

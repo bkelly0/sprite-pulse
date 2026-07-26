@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { BenchmarkDemoPage } from "./pages/BenchmarkDemoPage";
+import { ConcurrencyDemoPage } from "./pages/ConcurrencyDemoPage";
 import { ParticlesDemoPage } from "./pages/ParticlesDemoPage";
 import { SpriteSheetDemoPage } from "./pages/SpriteSheetDemoPage";
 import { ScrollingDemoPage } from "./pages/ScrollingDemoPage";
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<
-    "particles" | "sprite-sheets" | "benchmark" | "scrolling"
+    "particles" | "sprite-sheets" | "benchmark" | "scrolling" | "concurrency"
   >("particles");
 
   return (
@@ -40,6 +41,13 @@ export default function App() {
         >
           SpritePulse Demo: Benchmark
         </button>
+        <button
+          type="button"
+          className={activeTab === "concurrency" ? "tab active" : "tab"}
+          onClick={() => setActiveTab("concurrency")}
+        >
+          SpritePulse Demo: Concurrency
+        </button>
       </nav>
 
       {activeTab === "particles" ? (
@@ -53,6 +61,11 @@ export default function App() {
         <ScrollingDemoPage
           key="scrolling"
           title="SpritePulse Demo: Scrolling and Parallax"
+        />
+      ) : activeTab === "concurrency" ? (
+        <ConcurrencyDemoPage
+          key="concurrency"
+          title="SpritePulse Demo: Concurrency"
         />
       ) : (
         <BenchmarkDemoPage
