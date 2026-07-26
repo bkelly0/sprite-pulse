@@ -13,7 +13,7 @@ type CreateGameResponse = {
 export function ConcurrencyDemoPage({ title }: DemoPageProps) {
   const [status, setStatus] = useState("Creating session...");
   const [gameId, setGameId] = useState<string | null>(null);
-  const [instanceIds, setInstanceIds] = useState<number[]>([0]);
+  const [instanceIds] = useState<number[]>([0, 1]);
 
   useEffect(() => {
     const abortController = new AbortController();
@@ -57,18 +57,11 @@ export function ConcurrencyDemoPage({ title }: DemoPageProps) {
     };
   }, []);
 
-  const addInstance = () => {
-    setInstanceIds((current) => [...current, current.length]);
-  };
-
   return (
     <section>
       <h1>{title}</h1>
       <p>{status}</p>
       <p>Game ID: {gameId ?? "Creating session..."}</p>
-      <button type="button" onClick={addInstance} disabled={!gameId}>
-        Add Instance
-      </button>
       <div className="concurrency-canvas-grid">
         {gameId
           ? instanceIds.map((instanceId) => (
