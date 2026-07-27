@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+
+	"github.com/google/uuid"
 )
 
 func handleCreateGame(w http.ResponseWriter, r *http.Request) {
@@ -69,25 +71,19 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 	}
 	defer conn.Close()
 
-	log.Printf("Client connected with session: %s\n", cookie.Value)
+	log.Printf("Client connected with gameId: %s\n", cookie.Value)
 
 	runtime, exists := getGameRuntime(cookie.Value)
 	if !exists {
 		http.Error(w, "Unknown game-session cookie", http.StatusUnauthorized)
 		return
 	}
+	connectionId := uuid.New().String()
+	runtime.addClient(connectionId)
 
 	log.Printf("Started game runtime for game: %s\n", runtime.snapshot().GameID)
 
 	readDone := make(chan struct{})
-	go func() {
-		defer close(readDone)
-		for {
-			if _, _, err := conn.ReadMessage(); err != nil {
-				return
-			}
-		}
-	}()
 
 	for {
 		select {
@@ -105,6 +101,7 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 			})
 			if err != nil {
 				log.Println("Write error:", err)
+				runtime.removeClient(connectionId)
 				return
 			}
 		}

@@ -48,19 +48,24 @@ func randomVelocity() int {
 }
 
 type gameRuntime struct {
-	mu      sync.RWMutex
-	state   GameState
-	stop    chan struct{}
-	done    chan struct{}
-	updates chan GameState
+	mu               sync.RWMutex
+	state            GameState
+	expires          int64
+	createdAt        int64
+	connectedClients []string
+	stop             chan struct{}
+	done             chan struct{}
+	updates          chan GameState
 }
 
 func startGameRuntime(initialState GameState) *gameRuntime {
 	runtime := &gameRuntime{
-		state:   initialState,
-		stop:    make(chan struct{}),
-		done:    make(chan struct{}),
-		updates: make(chan GameState, 1),
+		state:     initialState,
+		stop:      make(chan struct{}),
+		done:      make(chan struct{}),
+		updates:   make(chan GameState, 1),
+		expires:   time.Now().Add(5 * time.Minute).UnixMilli(),
+		createdAt: time.Now().UnixMilli(),
 	}
 
 	go runtime.run()
@@ -85,6 +90,29 @@ func (g *gameRuntime) run() {
 		}
 	}
 }
+
+func (g *gameRuntime) addClient(clientID string) {
+	g.mu.Lock()
+	defer g.mu.Unlock()
+
+	g.connectedClients = append(g.connectedClients, clientID)
+}
+
+func (g *gameRuntime) removeClient(clientID string) {
+	g.mu.Lock()
+	defer g.mu.Unlock()
+
+	for i, id := range g.connectedClients {
+		if id == clientID {
+			g.connectedClients = append(g.connectedClients[:i], g.connectedClients[i+1:]...)
+			break
+		}
+	}
+}
+
+func (g *gameRuntime) hasClients() bool {
+	g.mu.RLock()
+	defer g.mu.RUnlock()
 
 func (g *gameRuntime) publishUpdate(state GameState) {
 	select {
