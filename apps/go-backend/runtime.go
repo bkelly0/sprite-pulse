@@ -114,6 +114,9 @@ func (g *gameRuntime) hasClients() bool {
 	g.mu.RLock()
 	defer g.mu.RUnlock()
 
+	return len(g.connectedClients) > 0
+}
+
 func (g *gameRuntime) publishUpdate(state GameState) {
 	select {
 	case g.updates <- state:

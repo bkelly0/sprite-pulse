@@ -1,5 +1,11 @@
 import { useEffect, useRef, useState } from "react";
-import { SpritePulse, SpriteSheetBundle } from "sprite-pulse";
+import {
+  Sprite,
+  SpritePulse,
+  SpriteSheetBundle,
+  Camera,
+  SpritePulseLayer
+} from "sprite-pulse";
 
 type DemoPageProps = {
   title: string;
@@ -7,7 +13,6 @@ type DemoPageProps = {
 
 export function ScrollingDemoPage({ title }: DemoPageProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const spritePulseRef = useRef<SpritePulse | null>(null);
   const [status, setStatus] = useState("Initializing...");
 
   useEffect(() => {
@@ -16,37 +21,83 @@ export function ScrollingDemoPage({ title }: DemoPageProps) {
       return;
     }
 
-    const bundle = SpriteSheetBundle.fromImageFiles("scrolling", [
-      "/images/tile1.png"
-    ]);
-    const spritePulse = new SpritePulse(canvas, [bundle]);
-    spritePulseRef.current = spritePulse;
-
     let isDisposed = false;
     let frameId: number | null = null;
-    let offset = 0;
+    let tileLayer: SpritePulseLayer = { sprites: [], parallax: .5 };
+    let tileLayer2: SpritePulseLayer = { sprites: [] };
 
-    void spritePulse.waitUntilReady().then(() => {
-      if (isDisposed) {
-        return;
-      }
+    const sceneBundle = SpriteSheetBundle.fromImageFiles("scrolling-demo", [
+      "/images/tile1.png",
+      "/images/tile2.png"
+    ]);
+    const camera = new Camera(0, 0, canvas.width, canvas.height);
+    const spritePulse = new SpritePulse(canvas, [sceneBundle], camera);
 
-      const sheet = bundle.createSingleFrameSpriteSheet("/images/tile1.png");
-      const loop = () => {
+    void spritePulse
+      .waitUntilReady()
+      .then(() => {
         if (isDisposed) {
           return;
         }
 
-        offset = (offset + 1) % canvas.width;
-        spritePulse.render([]);
-        setStatus(`Scrolling offset: ${offset}`);
-        frameId = requestAnimationFrame(loop);
-      };
+        const tileSheet = sceneBundle.createSingleFrameSpriteSheet(
+          "/images/tile1.png"
+        );
+        const markerSheet = sceneBundle.createSingleFrameSpriteSheet(
+          "/images/tile2.png"
+        );
 
-      setStatus("Running scrolling demo...");
-      frameId = requestAnimationFrame(loop);
-      void sheet;
-    });
+        let counter = 0;
+        for (let x = 0; x < canvas.width*3; x += 100) {
+          for (let y = 0; y < canvas.height*3; y += 100) {
+            counter++;
+            tileLayer.sprites.push(new Sprite(x, y, 100, 100, tileSheet));
+            if (counter % 2 == 0) {
+              tileLayer2.sprites.push(new Sprite(x, y, 100, 100, markerSheet));
+            }
+          }
+        }
+
+        let dirX = 1;
+        let dirY = 1;
+        const loop = () => {
+          if (isDisposed) {
+            return;
+          }
+
+          try {
+            camera.x += 2 * dirX;
+            camera.y += 2 * dirY;
+            if (camera.x <= 0 || camera.x >= canvas.width*2) {
+              dirX *= -1;
+            }
+            if (camera.y <= 0 || camera.y >= canvas.height*2) {
+              dirY *= -1;
+            }
+            spritePulse.render([tileLayer, tileLayer2]);
+          } catch (error: unknown) {
+            const message =
+              error instanceof Error ? error.message : "Unexpected render error.";
+            setStatus(`Loop recovered: ${message}`);
+          } finally {
+            if (!isDisposed) {
+              frameId = requestAnimationFrame(loop);
+            }
+          }
+        };
+
+        setStatus("Running...");
+        frameId = requestAnimationFrame(loop);
+      })
+      .catch((error: unknown) => {
+        if (isDisposed) {
+          return;
+        }
+
+        setStatus(
+          error instanceof Error ? error.message : "Unexpected loading error."
+        );
+      });
 
     return () => {
       isDisposed = true;
@@ -54,7 +105,8 @@ export function ScrollingDemoPage({ title }: DemoPageProps) {
         cancelAnimationFrame(frameId);
       }
       spritePulse.dispose();
-      spritePulseRef.current = null;
+      tileLayer.sprites = [];
+      tileLayer2.sprites = [];
     };
   }, []);
 
@@ -62,7 +114,7 @@ export function ScrollingDemoPage({ title }: DemoPageProps) {
     <section>
       <h1>{title}</h1>
       <p>{status}</p>
-      <canvas ref={canvasRef} width={960} height={540} />
+      <canvas ref={canvasRef} width={800} height={600} />
     </section>
   );
 }

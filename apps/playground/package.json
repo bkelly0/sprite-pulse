@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "cross-env": "^7.0.3",
+    "google-auth-library": "^10.9.1",
     "http-proxy": "^1.18.1",
     "next": "^15.4.5",
     "react": "^19.1.0",
