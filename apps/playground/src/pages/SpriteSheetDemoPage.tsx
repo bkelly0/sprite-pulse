@@ -64,10 +64,9 @@ export function SpriteSheetDemoPage({ title }: DemoPageProps) {
         ];
         const animation = new SpriteAnimation("default", [
           [1, 6],
+          [0, 6],
           [2, 6],
-          [3, 6],
-          [2, 6],
-          [1, 6]
+          [0, 6]
         ]);
         const spriteSheet = sceneBundle.createSpriteSheet(
           "/images/spriteSheetSmaller.png",

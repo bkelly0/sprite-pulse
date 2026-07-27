@@ -33,7 +33,6 @@ export function ParticlesDemoPage({ title }: DemoPageProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const spritePulseRef = useRef<SpritePulse | null>(null);
   const [status, setStatus] = useState("Initializing...");
-  const [cachedKeys, setCachedKeys] = useState<string[]>([]);
   const [intensity, setIntensity] = useState(0.5);
   const intensityRef = useRef(intensity);
   const [numSprites, setNumSprites] = useState(0);
@@ -69,7 +68,6 @@ export function ParticlesDemoPage({ title }: DemoPageProps) {
         }
 
         const keys = Array.from(spritePulse.shaderCache.keys());
-        setCachedKeys(keys);
         const particleSheets = [
           particleBundle.createSingleFrameSpriteSheet("/images/particle1.png"),
           particleBundle.createSingleFrameSpriteSheet("/images/particle2.png")
@@ -166,7 +164,6 @@ export function ParticlesDemoPage({ title }: DemoPageProps) {
           onChange={(event) => setIntensity(Number(event.target.value))}
         />
       </label>
-      <pre>{JSON.stringify(cachedKeys, null, 2)}</pre>
     </section>
   );
 }
