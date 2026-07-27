@@ -1,8 +1,7 @@
 import { useEffect, useRef } from "react";
 import { Sprite, SpritePulse, SpriteSheetBundle } from "sprite-pulse";
-import { ENV } from "../config/env";
+import { ENV, getWebSocketUrl } from "../config/env";
 
-const WS_ENDPOINT = ENV.WS_URL;
 const TARGET_FPS = 60;
 const FRAME_INTERVAL_MS = 1000 / TARGET_FPS;
 const SERVER_TICK_INTERVAL_MS = 1000 / 30;
@@ -53,7 +52,7 @@ export function ConcurrencyGameCanvas({
   const spriteMap = new Map<number, Sprite>();
 
   useEffect(() => {
-    const socket = new WebSocket(WS_ENDPOINT);
+    const socket = new WebSocket(getWebSocketUrl(ENV.WS_URL));
 
     socket.onmessage = (event) => {
       try {

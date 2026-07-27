@@ -9,8 +9,33 @@ Monorepo containing:
 
 - `npm install`: Install all workspace dependencies.
 - `npm run build`: Build the `spritePulse` library.
-- `npm run playground`: Run the React playground in dev mode.
+- `npm run playground`: Run the playground through the Next.js proxy server.
 - `npm run build:all`: Build all workspaces.
+
+## Playground Proxy
+
+The playground now serves its UI through a Next.js custom server and proxies backend
+traffic to the Go service over same-origin paths:
+
+- `POST /api/game`
+- `WS /ws`
+
+Set `GO_BACKEND_URL` on the playground server in Google Cloud to point at the Go backend
+origin, for example `https://your-go-backend.example.com`.
+
+## Google Cloud Deployment
+
+When you deploy the playground, keep the browser-facing app and the proxy server on the
+same origin. The proxy should forward requests to the Go backend using `GO_BACKEND_URL`,
+while the browser only talks to `/api/game` and `/ws` on the playground host.
+
+Recommended runtime environment variables for the playground service:
+
+- `GO_BACKEND_URL`: Public or internal URL for the Go backend service.
+- `PORT`: Port exposed by the playground container or service runtime.
+
+If you terminate TLS at Google Cloud, the websocket connection will upgrade through the
+same origin automatically as long as the playground host is serving the proxy.
 
 ## Asset Loading
 

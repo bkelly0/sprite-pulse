@@ -262,123 +262,93 @@ async function runScenario(
     });
   }
 
-  const warmupEnd = performance.now() + scenario.warmupMs;
-  const sampleEnd = warmupEnd + scenario.sampleMs;
+  const warmupUntil = performance.now() + scenario.warmupMs;
+  while (performance.now() < warmupUntil) {
+    if (runIdRef.current !== runId) {
+      return null;
+    }
 
-  let previousFrame = performance.now();
+    stepSprites(layers, spritePulse.canvas.width, spritePulse.canvas.height);
+    spritePulse.render(layers.flat().map((entry) => entry.sprite));
+    await delayFrame();
+  }
+
+  const sampleEnd = performance.now() + scenario.sampleMs;
   const frameTimes: number[] = [];
   const renderTimes: number[] = [];
+  let frameCount = 0;
 
   while (performance.now() < sampleEnd) {
     if (runIdRef.current !== runId) {
       return null;
     }
 
-    await nextAnimationFrame();
-
     const frameStart = performance.now();
-    const frameDelta = frameStart - previousFrame;
-    previousFrame = frameStart;
-
-    for (const layer of layers) {
-      for (const moving of layer) {
-        moving.sprite.x += moving.vx;
-        moving.sprite.y += moving.vy;
-
-        if (moving.sprite.x < 0 || moving.sprite.x > spritePulse.canvas.width - moving.sprite.width) {
-          moving.vx *= -1;
-          moving.sprite.x = clamp(moving.sprite.x, 0, spritePulse.canvas.width - moving.sprite.width);
-        }
-
-        if (moving.sprite.y < 0 || moving.sprite.y > spritePulse.canvas.height - moving.sprite.height) {
-          moving.vy *= -1;
-          moving.sprite.y = clamp(moving.sprite.y, 0, spritePulse.canvas.height - moving.sprite.height);
-        }
-      }
-    }
+    stepSprites(layers, spritePulse.canvas.width, spritePulse.canvas.height);
 
     const renderStart = performance.now();
-    if (scenario.layerCount === 1) {
-      spritePulse.render(
-        layers[0].map((moving) => moving.sprite),
-        {
-          useOffscreenBuffer: scenario.useOffscreenBuffer
-        }
-      );
-    } else {
-      spritePulse.render(
-        layers.map((layer) => layer.map((moving) => moving.sprite)),
-        {
-          useOffscreenBuffer: scenario.useOffscreenBuffer
-        }
-      );
-    }
-    const renderMs = performance.now() - renderStart;
+    spritePulse.render(layers.flat().map((entry) => entry.sprite));
+    const renderDuration = performance.now() - renderStart;
 
-    if (frameStart >= warmupEnd) {
-      frameTimes.push(frameDelta);
-      renderTimes.push(renderMs);
-    }
+    renderTimes.push(renderDuration);
+    frameTimes.push(performance.now() - frameStart);
+    frameCount += 1;
+
+    await delayFrame();
   }
 
-  if (frameTimes.length === 0) {
-    return {
-      scenario: scenario.name,
-      sprites: scenario.spriteCount,
-      layers: scenario.layerCount,
-      meanFps: 0,
-      low1PercentFps: 0,
-      p50FrameMs: 0,
-      p95FrameMs: 0,
-      p99FrameMs: 0,
-      meanRenderMs: 0
-    };
-  }
-
-  const meanFrameMs = mean(frameTimes);
-  const p50FrameMs = percentile(frameTimes, 50);
-  const p95FrameMs = percentile(frameTimes, 95);
-  const p99FrameMs = percentile(frameTimes, 99);
+  const sortedFrameTimes = [...frameTimes].sort((left, right) => left - right);
+  const sortedRenderTimes = [...renderTimes].sort((left, right) => left - right);
 
   return {
     scenario: scenario.name,
     sprites: scenario.spriteCount,
     layers: scenario.layerCount,
-    meanFps: 1000 / meanFrameMs,
-    low1PercentFps: 1000 / p99FrameMs,
-    p50FrameMs,
-    p95FrameMs,
-    p99FrameMs,
-    meanRenderMs: mean(renderTimes)
+    meanFps: frameCount / (scenario.sampleMs / 1000),
+    low1PercentFps: 1000 / percentile(sortedFrameTimes, 0.99),
+    p50FrameMs: percentile(sortedFrameTimes, 0.5),
+    p95FrameMs: percentile(sortedFrameTimes, 0.95),
+    p99FrameMs: percentile(sortedFrameTimes, 0.99),
+    meanRenderMs: average(sortedRenderTimes)
   };
 }
 
-function nextAnimationFrame(): Promise<void> {
-  return new Promise((resolve) => {
-    requestAnimationFrame(() => resolve());
-  });
-}
-
-function mean(values: number[]): number {
-  let sum = 0;
-  for (const value of values) {
-    sum += value;
+function stepSprites(
+  layers: MovingSprite[][],
+  canvasWidth: number,
+  canvasHeight: number
+): void {
+  for (const layer of layers) {
+    for (const entry of layer) {
+      entry.sprite.x += entry.vx;
+      entry.sprite.y += entry.vy;
+      if (entry.sprite.x < 0 || entry.sprite.x > canvasWidth) {
+        entry.vx *= -1;
+      }
+      if (entry.sprite.y < 0 || entry.sprite.y > canvasHeight) {
+        entry.vy *= -1;
+      }
+    }
   }
-  return sum / values.length;
 }
 
-function percentile(values: number[], percentileValue: number): number {
-  const sorted = [...values].sort((a, b) => a - b);
-  const rank = (percentileValue / 100) * (sorted.length - 1);
-  const lowIndex = Math.floor(rank);
-  const highIndex = Math.ceil(rank);
-  if (lowIndex === highIndex) {
-    return sorted[lowIndex];
+function percentile(values: number[], ratio: number): number {
+  if (values.length === 0) {
+    return 0;
   }
-  const weight = rank - lowIndex;
-  return sorted[lowIndex] + (sorted[highIndex] - sorted[lowIndex]) * weight;
+
+  const index = Math.min(values.length - 1, Math.max(0, Math.floor(values.length * ratio)));
+  return values[index];
 }
 
-function clamp(value: number, min: number, max: number): number {
-  return Math.min(max, Math.max(min, value));
+function average(values: number[]): number {
+  if (values.length === 0) {
+    return 0;
+  }
+
+  return values.reduce((total, value) => total + value, 0) / values.length;
+}
+
+function delayFrame(): Promise<void> {
+  return new Promise((resolve) => requestAnimationFrame(() => resolve()));
 }

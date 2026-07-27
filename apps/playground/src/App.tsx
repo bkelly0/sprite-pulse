@@ -1,9 +1,11 @@
+"use client";
+
 import { useState } from "react";
-import { BenchmarkDemoPage } from "./pages/BenchmarkDemoPage";
-import { ConcurrencyDemoPage } from "./pages/ConcurrencyDemoPage";
-import { ParticlesDemoPage } from "./pages/ParticlesDemoPage";
-import { SpriteSheetDemoPage } from "./pages/SpriteSheetDemoPage";
-import { ScrollingDemoPage } from "./pages/ScrollingDemoPage";
+import { BenchmarkDemoPage } from "./demo-pages/BenchmarkDemoPage";
+import { ConcurrencyDemoPage } from "./demo-pages/ConcurrencyDemoPage";
+import { ParticlesDemoPage } from "./demo-pages/ParticlesDemoPage";
+import { SpriteSheetDemoPage } from "./demo-pages/SpriteSheetDemoPage";
+import { ScrollingDemoPage } from "./demo-pages/ScrollingDemoPage";
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<
