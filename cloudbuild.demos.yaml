@@ -56,7 +56,7 @@ options:
 
 substitutions:
   _REGION: us-central1
-  _AR_REPO: docker-repo
+  _AR_REPO: app-images
   _IMAGE_NAME: sprite-pulse-playground
   _SERVICE_NAME: sprite-pulse-playground
   _SERVICE_ACCOUNT: sprite-pulse-demo-ui@bkelly-portfolio.iam.gserviceaccount.com
