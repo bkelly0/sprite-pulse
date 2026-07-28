@@ -37,6 +37,10 @@ steps:
       - ${_VPC_SUBNET}
       - --vpc-egress
       - ${_VPC_EGRESS}
+      - --min-instances
+      - "0"
+      - --max-instances
+      - "1"
 
 images:
   - gcr.io/$PROJECT_ID/go-backend:$SHORT_SHA
