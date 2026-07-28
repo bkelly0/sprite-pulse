@@ -35,8 +35,10 @@ steps:
       - "0"
       - --max-instances
       - "1"
-      - "--port"
-      - "80"
+      - --port
+      - 80
+      - --set-env-vars
+      - GCP_BACKEND_AUTH_ENABLED=true
 
 images:
   - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/${_IMAGE_NAME}:$SHORT_SHA

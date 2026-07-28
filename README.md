@@ -32,8 +32,8 @@ while the browser only talks to `/api/game` and `/ws` on the playground host.
 Recommended runtime environment variables for the playground service:
 
 - `GO_BACKEND_URL`: Public or internal URL for the Go backend service.
-- `NEXT_PUBLIC_PLAYGROUND_PROFILE`: Set to `local` to disable Google service account
-	auth header injection; any other value enables it.
+- `GCP_BACKEND_AUTH_ENABLED`: Set to `true` to enable Google service
+	account auth header injection. Defaults to disabled when omitted.
 - `PORT`: Port exposed by the playground container or service runtime.
 
 If you terminate TLS at Google Cloud, the websocket connection will upgrade through the

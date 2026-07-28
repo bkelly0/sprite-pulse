@@ -10,10 +10,18 @@ const { loadEnvConfig } = nextEnv;
 
 loadEnvConfig(process.cwd());
 
+function isEnabled(value) {
+  if (typeof value !== "string") {
+    return false;
+  }
+
+  return ["1", "true", "yes", "on"].includes(value.trim().toLowerCase());
+}
+
 const port = Number(process.env.PORT ?? 4000);
 const backendUrl = process.env.GO_BACKEND_URL ?? "http://localhost:8080";
-const playgroundProfile = process.env.NEXT_PUBLIC_PLAYGROUND_PROFILE ?? "production";
-const backendAuthDisabled = playgroundProfile === "local";
+const backendAuthEnabled = isEnabled(process.env.GCP_BACKEND_AUTH_ENABLED);
+const backendAuthDisabled = !backendAuthEnabled;
 const dev = process.env.NODE_ENV !== "production";
 const backendTargetUrl = new URL(backendUrl);
 const backendAudience = backendTargetUrl.origin;
@@ -102,7 +110,7 @@ server.listen(port, () => {
   console.log(`Proxying Go backend traffic to ${backendUrl}`);
   console.log(
     backendAuthDisabled
-      ? `Backend auth header injection is disabled for profile ${playgroundProfile}.`
-      : `Backend auth header injection is enabled for profile ${playgroundProfile}.`
+      ? "Backend auth header injection is disabled (GCP_BACKEND_AUTH_ENABLED is not enabled)."
+      : "Backend auth header injection is enabled via GCP_BACKEND_AUTH_ENABLED."
   );
 });
