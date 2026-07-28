@@ -44,9 +44,7 @@ steps:
       - --port
       - "80"
       - --set-env-vars
-      - GCP_BACKEND_AUTH_ENABLED=true
-      - NEXT_PUBLIC_ENABLE_PROXY=true
-      - GO_BACKEND_URL=https://go-backend-310011218707.us-central1.run.app
+      - GCP_BACKEND_AUTH_ENABLED=true,NEXT_PUBLIC_ENABLE_PROXY=true,GO_BACKEND_URL=https://go-backend-310011218707.us-central1.run.app
 
 images:
   - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/${_IMAGE_NAME}:$SHORT_SHA
