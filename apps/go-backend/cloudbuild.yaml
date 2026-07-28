@@ -26,9 +26,15 @@ steps:
       - managed
       - --no-allow-unauthenticated
       - --ingress
-      - all
+      - internal-and-cloud-load-balancing
       - --port
       - "8080"
+      - --network
+      - ${_VPC_NETWORK}
+      - --subnet
+      - ${_VPC_SUBNET}
+      - --vpc-egress
+      - ${_VPC_EGRESS}
 
 images:
   - gcr.io/$PROJECT_ID/go-backend:$SHORT_SHA
@@ -36,3 +42,7 @@ images:
 substitutions:
   _REGION: us-central1
   _SERVICE_NAME: go-backend
+  _VPC_NETWORK: demo-vpc
+  _VPC_SUBNET: cloud_run_egress
+  _VPC_EGRESS: private-ranges-only
+

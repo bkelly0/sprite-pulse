@@ -29,6 +29,10 @@ When you deploy the playground, keep the browser-facing app and the proxy server
 same origin. The proxy should forward requests to the Go backend using `GO_BACKEND_URL`,
 while the browser only talks to `/api/game` and `/ws` on the playground host.
 
+The Go backend is deployed privately: it keeps IAM authentication enabled and uses
+restricted Cloud Run ingress so the `run.app` endpoint is not directly reachable from
+the public internet.
+
 Recommended runtime environment variables for the playground service:
 
 - `GO_BACKEND_URL`: Public or internal URL for the Go backend service.
