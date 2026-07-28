@@ -11,5 +11,28 @@ steps:
       - push
       - gcr.io/$PROJECT_ID/go-backend:$SHORT_SHA
 
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
+    id: Deploy to Cloud Run
+    entrypoint: gcloud
+    args:
+      - run
+      - deploy
+      - ${_SERVICE_NAME}
+      - --image
+      - gcr.io/$PROJECT_ID/go-backend:$SHORT_SHA
+      - --region
+      - ${_REGION}
+      - --platform
+      - managed
+      - --no-allow-unauthenticated
+      - --ingress
+      - all
+      - --port
+      - "8080"
+
 images:
   - gcr.io/$PROJECT_ID/go-backend:$SHORT_SHA
+
+substitutions:
+  _REGION: us-central1
+  _SERVICE_NAME: go-backend

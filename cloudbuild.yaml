@@ -29,6 +29,8 @@ steps:
       - --platform
       - managed
       - --allow-unauthenticated
+      - --service-account
+      - ${_SERVICE_ACCOUNT}
       - --min-instances
       - "0"
       - --max-instances
@@ -47,3 +49,4 @@ substitutions:
   _AR_REPO: sprite-pulse
   _IMAGE_NAME: sprite-pulse-playground
   _SERVICE_NAME: sprite-pulse-playground
+  _SERVICE_ACCOUNT: sprite-pulse-demo-ui@bkelly-portfolio.iam.gserviceaccount.com
