@@ -35,7 +35,8 @@ func handleCreateGame(w http.ResponseWriter, r *http.Request) {
 func withCORS(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		origin := r.Header.Get("Origin")
-		if _, allowed := allowedOrigins[origin]; allowed {
+		_, explicitlyAllowed := allowedOrigins[origin]
+		if origin != "" && (allowAllOrigins || explicitlyAllowed) {
 			w.Header().Set("Access-Control-Allow-Origin", origin)
 			w.Header().Set("Access-Control-Allow-Credentials", "true")
 			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")

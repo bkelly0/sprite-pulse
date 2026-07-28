@@ -102,6 +102,12 @@ canvas {
   cursor: progress;
 }
 
+.benchmark-canvas {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
 .benchmark-table-wrap {
   overflow-x: auto;
 }

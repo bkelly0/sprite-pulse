@@ -30,6 +30,7 @@ let backendAuthClientPromise = null;
 
 const app = next({ dev, hostname: "0.0.0.0", port });
 const handle = app.getRequestHandler();
+let handleUpgrade = null;
 const proxy = createProxyServer({
   changeOrigin: true,
   target: backendTargetUrl.toString(),
@@ -65,6 +66,10 @@ async function applyBackendAuthorizationHeader(req) {
 
 await app.prepare();
 
+if (typeof app.getUpgradeHandler === "function") {
+  handleUpgrade = app.getUpgradeHandler();
+}
+
 const server = http.createServer(async (req, res) => {
   if (!req.url) {
     res.statusCode = 400;
@@ -83,7 +88,17 @@ const server = http.createServer(async (req, res) => {
 });
 
 server.on("upgrade", (req, socket, head) => {
-  if (!req.url || (!req.url.startsWith("/ws") && !req.url.startsWith("/api/ws"))) {
+  if (!req.url) {
+    socket.destroy();
+    return;
+  }
+
+  if (!req.url.startsWith("/ws") && !req.url.startsWith("/api/ws")) {
+    if (handleUpgrade) {
+      handleUpgrade(req, socket, head);
+      return;
+    }
+
     socket.destroy();
     return;
   }

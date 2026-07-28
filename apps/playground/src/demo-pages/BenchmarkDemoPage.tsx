@@ -197,7 +197,7 @@ export function BenchmarkDemoPage({ title }: DemoPageProps) {
         </button>
       </div>
 
-      <canvas ref={canvasRef} width={960} height={540} />
+      <canvas ref={canvasRef} width={960} height={540} className="benchmark-canvas" />
 
       <div className="benchmark-table-wrap">
         <table className="benchmark-table">
