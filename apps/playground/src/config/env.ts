@@ -24,7 +24,9 @@ function toWebSocketOrigin(httpOrigin: string): string {
 
 const useProxy = isEnabled(process.env.NEXT_PUBLIC_ENABLE_PROXY);
 const backendHttpOrigin = trimTrailingSlash(
-  process.env.NEXT_PUBLIC_GO_BACKEND_URL ?? "http://localhost:8080"
+  process.env.GO_BACKEND_URL ??
+    process.env.NEXT_PUBLIC_GO_BACKEND_URL ??
+    "http://localhost:8080"
 );
 const backendWebSocketOrigin = toWebSocketOrigin(backendHttpOrigin);
 
