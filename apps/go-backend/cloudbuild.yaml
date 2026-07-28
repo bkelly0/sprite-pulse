@@ -48,5 +48,5 @@ substitutions:
   _REGION: us-central1
   _SERVICE_NAME: go-backend
   _VPC_NETWORK: demo-vpc
-  _VPC_SUBNET: cloud_run_egress
+  _VPC_SUBNET: cloud-run-egress-subnet
   _VPC_EGRESS: private-ranges-only
