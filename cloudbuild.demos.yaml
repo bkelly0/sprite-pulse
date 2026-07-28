@@ -42,7 +42,7 @@ steps:
       - --max-instances
       - "1"
       - --port
-      - 80
+      - "80"
       - --set-env-vars
       - GCP_BACKEND_AUTH_ENABLED=true
       - NEXT_PUBLIC_ENABLE_PROXY=true
