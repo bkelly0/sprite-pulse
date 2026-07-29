@@ -1,5 +1,6 @@
 import {
   createFullscreenQuadGeometry,
+  createSolidColorShaderProgram,
   createTexturedShaderProgram,
   createRenderTarget,
   createTextureFromImage
@@ -37,6 +38,12 @@ export class SpritePulse {
   private readonly spriteProgram: WebGLProgram;
   private readonly spriteTextureUniformLocation: WebGLUniformLocation;
   private readonly spriteUvRectUniformLocation: WebGLUniformLocation;
+  private readonly rectangleProgram: WebGLProgram;
+  private readonly rectangleFillColorUniformLocation: WebGLUniformLocation;
+  private readonly rectangleStrokeColorUniformLocation: WebGLUniformLocation;
+  private readonly rectangleStrokeWidthUniformLocation: WebGLUniformLocation;
+  private readonly rectangleCornerRadiusUniformLocation: WebGLUniformLocation;
+  private readonly rectangleSizeUniformLocation: WebGLUniformLocation;
   private renderTarget: RenderTarget | null;
   private isDisposed = false;
 
@@ -66,20 +73,95 @@ export class SpritePulse {
       this.spriteProgram,
       "u_uvRect"
     ) as WebGLUniformLocation;
+    const rectangleShader = createSolidColorShaderProgram(gl);
+    this.rectangleProgram = rectangleShader.program;
+    this.rectangleFillColorUniformLocation = gl.getUniformLocation(
+      this.rectangleProgram,
+      "u_fillColor"
+    ) as WebGLUniformLocation;
+    this.rectangleStrokeColorUniformLocation = gl.getUniformLocation(
+      this.rectangleProgram,
+      "u_strokeColor"
+    ) as WebGLUniformLocation;
+    this.rectangleStrokeWidthUniformLocation = gl.getUniformLocation(
+      this.rectangleProgram,
+      "u_strokeWidth"
+    ) as WebGLUniformLocation;
+    this.rectangleCornerRadiusUniformLocation = gl.getUniformLocation(
+      this.rectangleProgram,
+      "u_cornerRadius"
+    ) as WebGLUniformLocation;
+    this.rectangleSizeUniformLocation = gl.getUniformLocation(
+      this.rectangleProgram,
+      "u_size"
+    ) as WebGLUniformLocation;
     if (!this.spriteTextureUniformLocation) {
       gl.deleteProgram(sharedShader.program);
       gl.deleteShader(sharedShader.vertexShader);
       gl.deleteShader(sharedShader.fragmentShader);
+      gl.deleteProgram(rectangleShader.program);
+      gl.deleteShader(rectangleShader.vertexShader);
+      gl.deleteShader(rectangleShader.fragmentShader);
       throw new Error("Missing u_texture uniform in shared sprite shader.");
     }
     if (!this.spriteUvRectUniformLocation) {
       gl.deleteProgram(sharedShader.program);
       gl.deleteShader(sharedShader.vertexShader);
       gl.deleteShader(sharedShader.fragmentShader);
+      gl.deleteProgram(rectangleShader.program);
+      gl.deleteShader(rectangleShader.vertexShader);
+      gl.deleteShader(rectangleShader.fragmentShader);
       throw new Error("Missing u_uvRect uniform in shared sprite shader.");
+    }
+    if (!this.rectangleFillColorUniformLocation) {
+      gl.deleteProgram(sharedShader.program);
+      gl.deleteShader(sharedShader.vertexShader);
+      gl.deleteShader(sharedShader.fragmentShader);
+      gl.deleteProgram(rectangleShader.program);
+      gl.deleteShader(rectangleShader.vertexShader);
+      gl.deleteShader(rectangleShader.fragmentShader);
+      throw new Error("Missing u_fillColor uniform in rectangle shader.");
+    }
+    if (!this.rectangleStrokeColorUniformLocation) {
+      gl.deleteProgram(sharedShader.program);
+      gl.deleteShader(sharedShader.vertexShader);
+      gl.deleteShader(sharedShader.fragmentShader);
+      gl.deleteProgram(rectangleShader.program);
+      gl.deleteShader(rectangleShader.vertexShader);
+      gl.deleteShader(rectangleShader.fragmentShader);
+      throw new Error("Missing u_strokeColor uniform in rectangle shader.");
+    }
+    if (!this.rectangleStrokeWidthUniformLocation) {
+      gl.deleteProgram(sharedShader.program);
+      gl.deleteShader(sharedShader.vertexShader);
+      gl.deleteShader(sharedShader.fragmentShader);
+      gl.deleteProgram(rectangleShader.program);
+      gl.deleteShader(rectangleShader.vertexShader);
+      gl.deleteShader(rectangleShader.fragmentShader);
+      throw new Error("Missing u_strokeWidth uniform in rectangle shader.");
+    }
+    if (!this.rectangleCornerRadiusUniformLocation) {
+      gl.deleteProgram(sharedShader.program);
+      gl.deleteShader(sharedShader.vertexShader);
+      gl.deleteShader(sharedShader.fragmentShader);
+      gl.deleteProgram(rectangleShader.program);
+      gl.deleteShader(rectangleShader.vertexShader);
+      gl.deleteShader(rectangleShader.fragmentShader);
+      throw new Error("Missing u_cornerRadius uniform in rectangle shader.");
+    }
+    if (!this.rectangleSizeUniformLocation) {
+      gl.deleteProgram(sharedShader.program);
+      gl.deleteShader(sharedShader.vertexShader);
+      gl.deleteShader(sharedShader.fragmentShader);
+      gl.deleteProgram(rectangleShader.program);
+      gl.deleteShader(rectangleShader.vertexShader);
+      gl.deleteShader(rectangleShader.fragmentShader);
+      throw new Error("Missing u_size uniform in rectangle shader.");
     }
     gl.deleteShader(sharedShader.vertexShader);
     gl.deleteShader(sharedShader.fragmentShader);
+    gl.deleteShader(rectangleShader.vertexShader);
+    gl.deleteShader(rectangleShader.fragmentShader);
     this.renderTarget = null;
 
     this.ready = this.initialize(assets);
@@ -191,10 +273,29 @@ export class SpritePulse {
   ): void {
     this.gl.enable(this.gl.BLEND);
     this.gl.blendFunc(this.gl.SRC_ALPHA, this.gl.ONE_MINUS_SRC_ALPHA);
-    this.gl.useProgram(this.spriteProgram);
     this.gl.bindVertexArray(this.quadVao);
-    this.gl.activeTexture(this.gl.TEXTURE0);
-    this.gl.uniform1i(this.spriteTextureUniformLocation, 0);
+
+    let activeProgram: "sprite" | "rectangle" | null = null;
+
+    const useSpriteProgram = (): void => {
+      if (activeProgram === "sprite") {
+        return;
+      }
+
+      this.gl.useProgram(this.spriteProgram);
+      this.gl.activeTexture(this.gl.TEXTURE0);
+      this.gl.uniform1i(this.spriteTextureUniformLocation, 0);
+      activeProgram = "sprite";
+    };
+
+    const useRectangleProgram = (): void => {
+      if (activeProgram === "rectangle") {
+        return;
+      }
+
+      this.gl.useProgram(this.rectangleProgram);
+      activeProgram = "rectangle";
+    };
 
     for (const layer of layers) {
       for (const sprite of layer.sprites) {
@@ -209,6 +310,48 @@ export class SpritePulse {
           continue;
         }
 
+        const viewportX = Math.round(renderRect.x);
+        const viewportY = Math.round(targetHeight - renderRect.y - renderRect.height);
+        const viewportWidth = Math.max(1, Math.round(renderRect.width));
+        const viewportHeight = Math.max(1, Math.round(renderRect.height));
+
+        this.gl.viewport(viewportX, viewportY, viewportWidth, viewportHeight);
+
+        if (sprite.kind === "rectangle") {
+          useRectangleProgram();
+
+          this.gl.uniform4f(
+            this.rectangleFillColorUniformLocation,
+            sprite.fillColor[0],
+            sprite.fillColor[1],
+            sprite.fillColor[2],
+            sprite.fillColor[3]
+          );
+          const strokeColor = sprite.strokeColor ?? [0, 0, 0, 0];
+          this.gl.uniform4f(
+            this.rectangleStrokeColorUniformLocation,
+            strokeColor[0],
+            strokeColor[1],
+            strokeColor[2],
+            strokeColor[3]
+          );
+          this.gl.uniform1f(
+            this.rectangleStrokeWidthUniformLocation,
+            sprite.strokeWidth
+          );
+          this.gl.uniform1f(
+            this.rectangleCornerRadiusUniformLocation,
+            sprite.cornerRadius
+          );
+          this.gl.uniform2f(
+            this.rectangleSizeUniformLocation,
+            viewportWidth,
+            viewportHeight
+          );
+          this.gl.drawArrays(this.gl.TRIANGLES, 0, 6);
+          continue;
+        }
+
         const entry = this.shaderCache.get(sprite.shaderRef);
         if (!entry) {
           throw new Error(
@@ -216,12 +359,7 @@ export class SpritePulse {
           );
         }
 
-        const viewportX = Math.round(renderRect.x);
-        const viewportY = Math.round(targetHeight - renderRect.y - renderRect.height);
-        const viewportWidth = Math.max(1, Math.round(renderRect.width));
-        const viewportHeight = Math.max(1, Math.round(renderRect.height));
-
-        this.gl.viewport(viewportX, viewportY, viewportWidth, viewportHeight);
+        useSpriteProgram();
         this.gl.bindTexture(this.gl.TEXTURE_2D, entry.texture);
         const uvRect = resolveSpriteUvRect(sprite, entry.width, entry.height);
         this.gl.uniform4f(
@@ -304,6 +442,7 @@ export class SpritePulse {
     }
 
     this.gl.deleteProgram(this.spriteProgram);
+    this.gl.deleteProgram(this.rectangleProgram);
     this.gl.deleteBuffer(this.quadBuffer);
     this.gl.deleteVertexArray(this.quadVao);
   }

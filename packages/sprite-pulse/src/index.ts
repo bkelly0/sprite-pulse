@@ -1,6 +1,9 @@
 export type { RenderOptions, SpritePulseLayer, SpriteShaderCacheEntry } from "./types";
 export type {
+	RectangleSpriteStyle,
+	SpriteColor,
 	SpriteFlipAxis,
+	SpriteKind,
 	SpritePulseAtlasAssetSource,
 	SpritePulseAtlasMetadata,
 	SpriteSheetBundleAtlasFrame,

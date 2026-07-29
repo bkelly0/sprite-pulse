@@ -6,10 +6,16 @@ import { ConcurrencyDemoPage } from "./demo-pages/ConcurrencyDemoPage";
 import { ParticlesDemoPage } from "./demo-pages/ParticlesDemoPage";
 import { SpriteSheetDemoPage } from "./demo-pages/SpriteSheetDemoPage";
 import { ScrollingDemoPage } from "./demo-pages/ScrollingDemoPage";
+import { VectorShapesDemoPage } from "./demo-pages/VectorShapesDemoPage";
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<
-    "particles" | "sprite-sheets" | "benchmark" | "scrolling" | "concurrency"
+    | "particles"
+    | "sprite-sheets"
+    | "benchmark"
+    | "scrolling"
+    | "concurrency"
+    | "vector-shapes"
   >("particles");
 
   return (
@@ -35,6 +41,13 @@ export default function App() {
           onClick={() => setActiveTab("scrolling")}
         >
           SpritePulse Demo: Scrolling and Parallax
+        </button>
+        <button
+          type="button"
+          className={activeTab === "vector-shapes" ? "tab active" : "tab"}
+          onClick={() => setActiveTab("vector-shapes")}
+        >
+          SpritePulse Demo: Vector Shapes
         </button>
         <button
           type="button"
@@ -68,6 +81,11 @@ export default function App() {
         <ConcurrencyDemoPage
           key="concurrency"
           title="SpritePulse Demo: Concurrency"
+        />
+      ) : activeTab === "vector-shapes" ? (
+        <VectorShapesDemoPage
+          key="vector-shapes"
+          title="SpritePulse Demo: Vector Shapes"
         />
       ) : (
         <BenchmarkDemoPage
