@@ -4,7 +4,7 @@ import {
   SpritePulse,
   SpriteSheet,
   SpriteSheetBundle
-} from "sprite-pulse";
+} from "@bkelly0/sprite-pulse";
 
 type DemoPageProps = {
   title: string;

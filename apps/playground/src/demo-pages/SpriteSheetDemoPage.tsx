@@ -6,7 +6,7 @@ import {
   SpritePulse,
   SpriteSheetBundle,
   type SpriteFlipAxis
-} from "sprite-pulse";
+} from "@bkelly0/sprite-pulse";
 
 type DemoPageProps = {
   title: string;

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Sprite, SpritePulse, SpriteSheet, SpriteSheetBundle } from "sprite-pulse";
+import { Sprite, SpritePulse, SpriteSheet, SpriteSheetBundle } from "@bkelly0/sprite-pulse";
 
 type DemoPageProps = {
   title: string;

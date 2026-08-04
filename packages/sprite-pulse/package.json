@@ -1,6 +1,6 @@
 {
-  "name": "sprite-pulse",
-  "version": "0.1.0",
+  "name": "@bkelly0/sprite-pulse",  
+  "version": "0.1.0-alpha.0", 
   "description": "TypeScript utility library for sprite rendering and animations.",
   "license": "MIT",
   "main": "./dist/index.js",

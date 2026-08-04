@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { Sprite, SpritePulse, SpriteSheetBundle } from "sprite-pulse";
+import { Sprite, SpritePulse, SpriteSheetBundle } from "@bkelly0/sprite-pulse";
 import { ENV, getWebSocketUrl } from "../config/env";
 
 const TARGET_FPS = 60;

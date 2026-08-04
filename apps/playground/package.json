@@ -15,7 +15,7 @@
     "next": "^15.4.5",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
-    "sprite-pulse": "file:../../packages/sprite-pulse"
+    "@bkelly0/sprite-pulse": "file:../../packages/sprite-pulse"
   },
   "devDependencies": {
     "@types/node": "20.17.6",

@@ -5,7 +5,7 @@ import {
   SpriteSheetBundle,
   Camera,
   SpritePulseLayer
-} from "sprite-pulse";
+} from "@bkelly0/sprite-pulse";
 
 type DemoPageProps = {
   title: string;
