@@ -43,10 +43,8 @@ steps:
       - ${_VPC_SUBNET}
       - --vpc-egress
       - ${_VPC_EGRESS}
-      - --min-instances
-      - "0"
-      - --max-instances
-      - "1"
+      - --min-instances=0
+      - --max-instances=1
       - --port
       - "80"
       - --set-env-vars
