@@ -1,0 +1,17 @@
+{
+  "name": "sprite-pulse-workspace",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "build": "npm run build -w sprite-pulse",
+    "dev": "npm run dev -w sprite-pulse",
+    "playground": "npm run dev -w playground",
+    "build:all": "npm run build -ws",
+    "format": "prettier . --write",
+    "format:check": "prettier . --check"
+  }
+}

@@ -1,0 +1,58 @@
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - -f
+      - apps/go-backend/Dockerfile
+      - -t
+      - gcr.io/$PROJECT_ID/go-backend:$SHORT_SHA
+      - apps/go-backend
+
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - push
+      - gcr.io/$PROJECT_ID/go-backend:$SHORT_SHA
+
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
+    id: Deploy to Cloud Run
+    entrypoint: gcloud
+    args:
+      - run
+      - deploy
+      - ${_SERVICE_NAME}
+      - --image
+      - gcr.io/$PROJECT_ID/go-backend:$SHORT_SHA
+      - --region
+      - ${_REGION}
+      - --platform
+      - managed
+      - --no-allow-unauthenticated
+      - --ingress
+      - internal
+      - --port
+      - "8080"
+      - --network
+      - ${_VPC_NETWORK}
+      - --subnet
+      - ${_VPC_SUBNET}
+      - --vpc-egress
+      - ${_VPC_EGRESS}
+      - --min-instances
+      - "0"
+      - --max-instances
+      - "1"
+      - --set-env-vars
+      - JSON_LOGGING=1
+
+images:
+  - gcr.io/$PROJECT_ID/go-backend:$SHORT_SHA
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+
+substitutions:
+  _REGION: us-central1
+  _SERVICE_NAME: go-backend
+  _VPC_NETWORK: demo-vpc
+  _VPC_SUBNET: cloud-run-egress-subnet
+  _VPC_EGRESS: private-ranges-only
