@@ -1,5 +1,6 @@
 export function AboutPage() {
   return (
+    <>
     <section>
       <h1>About</h1>
       <p>
@@ -18,5 +19,11 @@ export function AboutPage() {
         Note: Backend state demos are configured to have concurrency limits and game states expire to keep the resource cost down.
       </p>
     </section>
+    <section className="github-links">
+      <div>
+        <i className="bi bi-github icon-left"></i><a href="https://github.com/bkelly0/sprite-pulse/" target="_blank">Sources</a>
+      </div>
+    </section>
+    </>
   );
 }

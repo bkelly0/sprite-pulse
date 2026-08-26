@@ -1,3 +1,5 @@
+@import "bootstrap-icons/font/bootstrap-icons.css";
+
 :root {
   color-scheme: dark;
   font-family: "Trebuchet MS", "Lucida Sans Unicode", "Lucida Grande", Verdana,
@@ -198,6 +200,14 @@ input[type="range"] {
 
 button {
   font-family: inherit;
+}
+
+.icon-left {
+  margin-right: 0.5rem;
+}
+
+.github-links {
+  margin-top: 1rem;
 }
 
 @media (max-width: 900px) {

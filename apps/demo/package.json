@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@bkelly0/sprite-pulse": "file:../../packages/sprite-pulse",
+    "bootstrap-icons": "^1.13.1",
     "cross-env": "^7.0.3",
     "google-auth-library": "^10.9.1",
     "http-proxy": "^1.18.1",
