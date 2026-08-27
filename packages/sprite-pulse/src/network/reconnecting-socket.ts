@@ -11,6 +11,7 @@ export type ReconnectingSocketOptions<TMessage> = {
   onMessage: (message: TMessage) => void;
   onStatusChange?: (status: ConnectionStatus) => void;
   createSocket?: (url: string) => WebSocket;
+  shouldReconnect?: (event: CloseEvent) => boolean;
   backoff?: { initialMs?: number; maxMs?: number };
 };
 
@@ -30,6 +31,7 @@ export function createReconnectingSocket<TMessage>(
     onMessage,
     onStatusChange,
     createSocket = (socketUrl: string) => new WebSocket(socketUrl),
+    shouldReconnect = () => true,
     backoff,
   } = options;
   const initialBackoffMs = backoff?.initialMs ?? DEFAULT_INITIAL_BACKOFF_MS;
@@ -67,8 +69,14 @@ export function createReconnectingSocket<TMessage>(
       onStatusChange?.({ kind: "error", error: event });
     };
 
-    nextSocket.onclose = () => {
+    nextSocket.onclose = (event) => {
       if (cancelled) {
+        return;
+      }
+
+      if (!shouldReconnect(event)) {
+        cancelled = true;
+        onStatusChange?.({ kind: "closed", willRetry: false });
         return;
       }
 

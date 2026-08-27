@@ -10,9 +10,9 @@ export function AboutPage() {
         synchronization, driving multiple client viewports at 60 FPS.
       </p>
       <p>
-        The initial component, <strong>SpritePulse</strong>, is a custom WebGL
+        The initial component, <strong>Sprite-Pulse</strong>, is a custom WebGL
         rendering engine built in TypeScript. Rather than using an off-the-shelf
-        engine, I developed SpritePulse to explore state interpolation algorithms
+        engine, I developed Sprite-Pulse to explore state interpolation algorithms
         and isolate state rendering from application logic.
       </p>
       <p>

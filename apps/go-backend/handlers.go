@@ -2,11 +2,17 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
+	"time"
 
 	"github.com/google/uuid"
+	"github.com/gorilla/websocket"
 )
+
+//application close code telling the client the game session ended and will not come back
+const closeCodeGameExpired = 4001
 
 func handleCreateGame(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
@@ -30,8 +36,21 @@ func handleCreateGame(w http.ResponseWriter, r *http.Request) {
 	}
 
 	gameID := getUUID();
-	createAndStoreGameRuntime(gameID, demoID)
-	
+	if _, err := createAndStoreGameRuntime(gameID, demoID); err != nil {
+		if errors.Is(err, errGameCapacityReached) {
+			logger.Warn("Game creation refused, at capacity", "demo_id", demoID, "max_game_states", maxActiveGameRuntimes)
+			w.Header().Set("Content-Type", "application/json")
+			w.Header().Set("Retry-After", "30")
+			w.WriteHeader(http.StatusServiceUnavailable)
+			if err := json.NewEncoder(w).Encode(map[string]string{"error": "at_capacity"}); err != nil {
+				logger.Error("Write capacity response error", "error", err.Error())
+			}
+			return
+		}
+
+		http.Error(w, "Failed to create game", http.StatusInternalServerError)
+		return
+	}
 
 	http.SetCookie(w, &http.Cookie{
 		Name:     "game-session",
@@ -137,5 +156,14 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 			logger.Error("Write state update error", "error", err.Error(), "game_id", cookie.Value, "connection_id", connectionId)
 			return
 		}
+	}
+
+	//the channel only closes when the runtime is stopped, so the session is gone for good
+	if err := conn.WriteControl(
+		websocket.CloseMessage,
+		websocket.FormatCloseMessage(closeCodeGameExpired, "game session expired"),
+		time.Now().Add(time.Second),
+	); err != nil {
+		logger.Error("Write close frame error", "error", err.Error(), "game_id", cookie.Value, "connection_id", connectionId)
 	}
 }

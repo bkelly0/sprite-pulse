@@ -1,6 +1,6 @@
-# SpritePulse
+# Sprite-Pulse
 
-SpritePulse is a TypeScript library for sprite rendering, sprite-sheet management, and animation playback in browser-based scenes.
+Sprite-Pulse is a TypeScript library for sprite rendering, sprite-sheet management, and animation playback in browser-based scenes.
 
 It is designed to be used as a reusable rendering dependency in other apps, rather than as a deployment-specific service or demo app.
 

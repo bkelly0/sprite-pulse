@@ -42,8 +42,10 @@ func cleanExpiredGameRuntimesRoutine() {
         }
         gameRuntimesMu.Unlock()
 
-        for _, runtime := range expired {
+        for i, runtime := range expired {
+            //stopping closes every client update channel, which ends the socket writer loop
             runtime.stopAndWait()
+            logger.Info("Game runtime expired", "game_id", expiredIDs[i])
         }
     }
 }

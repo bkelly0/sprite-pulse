@@ -25,6 +25,12 @@ export function ConcurrencyDemoPage({ title }: DemoPageProps) {
       body: JSON.stringify({demoID: 2})
     })
       .then(async (response) => {
+        if (response.status === 503) {
+          throw new Error(
+            "The demo backend is at capacity right now. Please try again in a few minutes.",
+          );
+        }
+
         if (!response.ok) {
           throw new Error(
             `Game creation failed with status ${response.status}.`,

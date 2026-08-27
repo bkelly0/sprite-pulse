@@ -14,7 +14,7 @@ export function ScrollingDemoPage() {
         <p>
           This demo shows camera-based world scrolling with layered sprites.
           Instead of moving every sprite each frame, it moves a camera across a
-          larger tile map, and Sprite Pulse renders the visible portion of the
+          larger tile map, and Sprite-Pulse renders the visible portion of the
           scene.
         </p>
         <h3>What the Demo Is Doing</h3>
@@ -29,7 +29,7 @@ export function ScrollingDemoPage() {
             continuous panning.
           </li>
           <li>
-            Renders layers each frame through the SpritePulse loop callback.
+            Renders layers each frame through the Sprite-Pulse loop callback.
           </li>
         </ul>
         <h3>Key Concepts</h3>

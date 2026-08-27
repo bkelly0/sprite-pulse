@@ -1,12 +1,24 @@
 package main
 
 import (
+	"errors"
 	"sync"
 	"time"
 )
 
 var gameRuntimes = make(map[string]*gameRuntime)
 var gameRuntimesMu sync.RWMutex
+
+//how many game runtimes may exist at once before new sessions are refused
+const maxActiveGameRuntimes = 50
+
+var errGameCapacityReached = errors.New("maximum number of active game states reached")
+
+//hard cap on how long a game runtime lives, even while clients are connected
+const maxGameLifetime = 5 * time.Minute
+
+//how long a runtime survives with no clients attached
+const idleGameLifetime = 5 * time.Second
 
 type gameDemo interface {
 	newGameState(gameID string, cfg DemoConfig) GameState
@@ -59,20 +71,27 @@ type gameRuntime struct {
 }
 
 func startGameRuntime(initialState GameState) *gameRuntime {
-	runtime := &gameRuntime{
+	runtime := newGameRuntime(initialState)
+	runtime.start()
+
+	return runtime
+}
+
+func newGameRuntime(initialState GameState) *gameRuntime {
+	return &gameRuntime{
 		state:         initialState,
 		demo:          demoFor(initialState.DemoID),
 		config:        configFor(initialState.DemoID),
 		stop:          make(chan struct{}),
 		done:          make(chan struct{}),
 		clientUpdates: make(map[string]chan GameState),
-		expires:       time.Now().Add(5 * time.Minute).UnixMilli(),
+		expires:       time.Now().Add(idleGameLifetime).UnixMilli(),
 		createdAt:     time.Now().UnixMilli(),
 	}
+}
 
-	go runtime.run()
-
-	return runtime
+func (g *gameRuntime) start() {
+	go g.run()
 }
 
 func (g *gameRuntime) run() {
@@ -96,7 +115,13 @@ func (g *gameRuntime) run() {
 func (g *gameRuntime) isExpired(currentTime int64) bool {
 	g.mu.RLock()
 	defer g.mu.RUnlock()
-	return g.expires > currentTime
+
+	if currentTime-g.createdAt >= maxGameLifetime.Milliseconds() {
+		return true
+	}
+
+	//an expiry of 0 means clients are attached, so only the lifetime cap applies
+	return g.expires != 0 && currentTime > g.expires
 }
 
 func (g *gameRuntime) addClient(clientID string) <-chan GameState {
@@ -128,7 +153,7 @@ func (g *gameRuntime) removeClient(clientID string) {
 	}
 
 	if len(g.connectedClients) == 0 {
-		g.expires = time.Now().Add(5 * time.Second).UnixMilli()
+		g.expires = time.Now().Add(idleGameLifetime).UnixMilli()
 	}
 
 }
@@ -206,33 +231,46 @@ func (g *gameRuntime) snapshot() GameState {
 	}
 }
 
-func createAndStoreGameRuntime(gameID string, demoIDs ...int) *gameRuntime {
+func createAndStoreGameRuntime(gameID string, demoIDs ...int) (*gameRuntime, error) {
 	demoID := 1
 	if len(demoIDs) > 0 {
 		demoID = demoIDs[0]
 	}
 
 	gameRuntimesMu.RLock()
-	if runtime, exists := gameRuntimes[gameID]; exists {
-		gameRuntimesMu.RUnlock()
-		return runtime
-	}
+	existing, exists := gameRuntimes[gameID]
+	atCapacity := len(gameRuntimes) >= maxActiveGameRuntimes
 	gameRuntimesMu.RUnlock()
 
-	runtime := startGameRuntime(newGameState(gameID, demoID))
+	if exists {
+		return existing, nil
+	}
+
+	if atCapacity {
+		return nil, errGameCapacityReached
+	}
+
+	//built but not started, so losing the race below cannot leak a ticking goroutine
+	runtime := newGameRuntime(newGameState(gameID, demoID))
 
 	gameRuntimesMu.Lock()
 	if existing, exists := gameRuntimes[gameID]; exists {
 		gameRuntimesMu.Unlock()
-		return existing
+		return existing, nil
+	}
+	if len(gameRuntimes) >= maxActiveGameRuntimes {
+		gameRuntimesMu.Unlock()
+		return nil, errGameCapacityReached
 	}
 	gameRuntimes[gameID] = runtime
 	activeCount := len(gameRuntimes)
 	gameRuntimesMu.Unlock()
 
+	runtime.start()
+
 	logger.Info("Game runtime created", "game_id", gameID, "demo_id", demoID, "active_game_states", activeCount)
 
-	return runtime
+	return runtime, nil
 }
 
 func getGameRuntime(gameID string) (*gameRuntime, bool) {

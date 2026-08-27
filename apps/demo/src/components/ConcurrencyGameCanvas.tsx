@@ -16,6 +16,10 @@ const TARGET_FPS = 60;
 const SERVER_TICK_INTERVAL_MS = 1000 / 30;
 const FPS_EMA_ALPHA = 0.15;
 const FPS_UI_UPDATE_INTERVAL_MS = 500;
+const MIN_INTERPOLATION_INTERVAL_MS = SERVER_TICK_INTERVAL_MS / 2;
+const MAX_INTERPOLATION_INTERVAL_MS = SERVER_TICK_INTERVAL_MS * 3;
+//matches closeCodeGameExpired on the Go backend
+const CLOSE_CODE_GAME_EXPIRED = 4001;
 
 type GameStateRect = {
   x: number;
@@ -72,17 +76,20 @@ export function ConcurrencyGameCanvas({
   useEffect(() => {
     let lastStateUpdateTime: number | null = null;
     let lastStateFpsUiUpdateTime = 0;
+    let stateDeltaEma = 0;
+    stateFPSRef.current = 0;
     function updateStateFPS(now: number) {
-        //running average of state update FPS using exponential moving average
+        //average the arrival interval rather than the instantaneous rate; 1/dt is convex, so bursty
+        //frame delivery would otherwise bias the reported FPS far above the real 30Hz server tick
         if (lastStateUpdateTime !== null) {
           const stateDeltaMs = now - lastStateUpdateTime;
           if (stateDeltaMs > 0 && Number.isFinite(stateDeltaMs)) {
-            const instantStateFPS = 1000 / stateDeltaMs;
-            stateFPSRef.current =
-              stateFPSRef.current === 0
-                ? instantStateFPS
-                : stateFPSRef.current +
-                  FPS_EMA_ALPHA * (instantStateFPS - stateFPSRef.current);
+            stateDeltaEma =
+              stateDeltaEma === 0
+                ? stateDeltaMs
+                : stateDeltaEma +
+                  FPS_EMA_ALPHA * (stateDeltaMs - stateDeltaEma);
+            stateFPSRef.current = 1000 / stateDeltaEma;
 
             if (
               now - lastStateFpsUiUpdateTime >= FPS_UI_UPDATE_INTERVAL_MS
@@ -101,7 +108,9 @@ export function ConcurrencyGameCanvas({
           return `WebSocket connection failed for game ${gameId}.`;
         case "closed":
           setConnectionId(null);
-          return null;
+          return status.willRetry
+            ? null
+            : `Game session ${gameId} expired. Reload to start a new one.`;
         case "message-error": {
           const error = status.error;
           return error instanceof Error
@@ -116,6 +125,7 @@ export function ConcurrencyGameCanvas({
     const handle = createReconnectingSocket<GameMessage>({
       url: () => getWebSocketUrl(ENV.WS_URL),
       parseMessage: (raw) => JSON.parse(raw) as GameMessage,
+      shouldReconnect: (event) => event.code !== CLOSE_CODE_GAME_EXPIRED,
       onMessage: (message) => {
         if (message.type === "connection_info") {
           setConnectionId(message.connection_id);
@@ -141,7 +151,7 @@ export function ConcurrencyGameCanvas({
   }, [gameId, onStatusChange]);
 
   useEffect(() => {
-    let renderFpsEma = 0;
+    let renderDeltaEma = 0;
     let lastRenderFpsUiUpdate = 0;
 
     const container = containerRef.current;
@@ -198,9 +208,17 @@ export function ConcurrencyGameCanvas({
             if (interpolationPair) {
               const previousState = interpolationPair.previous;
               const currentState = interpolationPair.current;
+              //use the observed spacing between snapshots so network jitter does not desync interpolation
+              const stateIntervalMs = Math.min(
+                MAX_INTERPOLATION_INTERVAL_MS,
+                Math.max(
+                  MIN_INTERPOLATION_INTERVAL_MS,
+                  currentState.receivedAt - previousState.receivedAt,
+                ),
+              );
               const interpolationAlpha = computeInterpolationAlpha(
                 Math.max(0, timestamp - currentState.receivedAt),
-                SERVER_TICK_INTERVAL_MS,
+                stateIntervalMs,
               );
 
               syncById({
@@ -275,17 +293,15 @@ export function ConcurrencyGameCanvas({
       //method for updating the FPS display for the render
       function updateRenderFPS(timestamp: number, deltaMs: number) {
             if (deltaMs > 0) {
-              const instantRenderFPS = 1000 / deltaMs;
-              renderFpsEma =
-                renderFpsEma === 0
-                  ? instantRenderFPS
-                  : renderFpsEma +
-                    FPS_EMA_ALPHA * (instantRenderFPS - renderFpsEma);
+              renderDeltaEma =
+                renderDeltaEma === 0
+                  ? deltaMs
+                  : renderDeltaEma + FPS_EMA_ALPHA * (deltaMs - renderDeltaEma);
 
               if (
                 timestamp - lastRenderFpsUiUpdate >= FPS_UI_UPDATE_INTERVAL_MS
               ) {
-                setRenderFPS(renderFpsEma);
+                setRenderFPS(1000 / renderDeltaEma);
                 lastRenderFpsUiUpdate = timestamp;
               }
             }

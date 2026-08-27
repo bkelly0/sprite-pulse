@@ -1,5 +1,16 @@
 steps:
+  - name: golang:1.26.4-alpine
+    id: Test
+    dir: apps/go-backend
+    entrypoint: go
+    args:
+      - test
+      - ./...
+
   - name: gcr.io/cloud-builders/docker
+    id: Build image
+    waitFor:
+      - Test
     args:
       - build
       - -f
@@ -9,6 +20,7 @@ steps:
       - apps/go-backend
 
   - name: gcr.io/cloud-builders/docker
+    id: Push image
     args:
       - push
       - gcr.io/$PROJECT_ID/go-backend:$SHORT_SHA

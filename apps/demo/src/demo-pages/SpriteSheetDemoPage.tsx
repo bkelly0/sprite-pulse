@@ -29,7 +29,7 @@ export function SpriteSheetDemoPage() {
             animate from shared frame data.
           </li>
           <li>
-            During rendering, Sprite Pulse advances animation frames and updates
+            During rendering, Sprite-Pulse advances animation frames and updates
             UV coordinates so the correct sub-rectangle of the texture is
             sampled each frame.
           </li>

@@ -25,6 +25,12 @@ export function BackendQuadTreeDemoPage({ title }: DemoPageProps) {
       body: JSON.stringify({demoID: 3})
     })
       .then(async (response) => {
+        if (response.status === 503) {
+          throw new Error(
+            "The demo backend is at capacity right now. Please try again in a few minutes.",
+          );
+        }
+
         if (!response.ok) {
           throw new Error(
             `Game creation failed with status ${response.status}.`,
@@ -64,7 +70,7 @@ export function BackendQuadTreeDemoPage({ title }: DemoPageProps) {
       <h2>Overview</h2>
       <p>This demo shows a large, dynamic game state where the <strong>Go</strong> backend owns the simulation and runs collision detection using a quad tree, while the client is purely a renderer for the results it receives over a WebSocket. Every simulation tick, the server advances each sprite's position, rebuilds a quad tree over the current frame, and uses it to find overlapping pairs far faster than checking every sprite against every other sprite.</p>
       <p>To make the algorithm visible instead of just its outcome, the backend is returning the bounding box of every node it visited (root down to leaves) as part of the state payload. Sprites involved in a collision are flagged with a state value the client uses to change their appearance. The frontend draws each of those node boundaries so you can watch the tree subdivide more densely wherever sprites are clustered together.</p>
-      <h3>How Sprite Pulse Handles the Network and Motion</h3>
+      <h3>How Sprite-Pulse Handles the Network and Motion</h3>
       <ul>
         <li>
           A <code>createReconnectingSocket</code> helper opens the WebSocket, parses each incoming <code>state_update</code> message, and automatically re-establishes the connection if it drops, reporting status changes back to the page.
