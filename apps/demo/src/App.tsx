@@ -65,7 +65,7 @@ export default function App() {
 
   return (
     <main>
-      <h1>SpritePulse Demos</h1>
+      <h1>Sprite-Pulse Demos</h1>
       <nav className="tabs" aria-label="Demo pages">
         <button
           type="button"

@@ -12,13 +12,20 @@ export function lerp(start: number, end: number, alpha: number): number {
   return start + (end - start) * safeAlpha;
 }
 
+//does not clamp alpha, so callers can extrapolate past the known endpoints
+export function lerpUnclamped(start: number, end: number, alpha: number): number {
+  return start + (end - start) * alpha;
+}
+
 export function interpolatePoint(
   start: Point,
   end: Point,
   alpha: number,
+  options?: { clamp?: boolean },
 ): Point {
+  const interpolate = options?.clamp === true ? lerp : lerpUnclamped;
   return {
-    x: lerp(start.x, end.x, alpha),
-    y: lerp(start.y, end.y, alpha),
+    x: interpolate(start.x, end.x, alpha),
+    y: interpolate(start.y, end.y, alpha),
   };
 }

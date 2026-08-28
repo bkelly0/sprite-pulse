@@ -9,7 +9,7 @@ export function ParticlesDemoPage() {
     <section>
         <h2>Overview</h2>
         <p>
-          This demo is a stress-style particle renderer. On each animation
+          This is a stress-style particle renderer. On each animation
           frame, it spawns new sprites from the center of the canvas, gives each
           sprite randomized velocity and size, applies gravity, and removes
           sprites once they fall off-screen.
@@ -30,10 +30,6 @@ export function ParticlesDemoPage() {
           </li>
           <li>
             The full active sprite list is re-rendered each frame.
-          </li>
-          <li>
-            The live sprite count shows how the workload grows under sustained
-            rendering.
           </li>
         </ul>
         <h3>Efficiency</h3>

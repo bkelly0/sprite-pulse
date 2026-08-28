@@ -10,6 +10,8 @@ const { loadEnvConfig } = nextEnv;
 
 loadEnvConfig(process.cwd());
 
+const demoLoaderOrigin = "https://sprite-pulse-demo-loader.bradfordkelly.com";
+
 function isEnabled(value) {
   if (typeof value !== "string") {
     return false;
@@ -75,6 +77,19 @@ const server = http.createServer(async (req, res) => {
   if (!req.url) {
     res.statusCode = 400;
     res.end("Missing request URL.");
+    return;
+  }
+
+  if (req.headers.origin === demoLoaderOrigin) {
+    res.setHeader("Access-Control-Allow-Origin", demoLoaderOrigin);
+    res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+    res.setHeader("Vary", "Origin");
+  }
+
+  if (req.method === "OPTIONS") {
+    res.statusCode = 204;
+    res.end();
     return;
   }
 

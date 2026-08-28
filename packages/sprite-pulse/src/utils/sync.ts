@@ -1,5 +1,3 @@
-import { clamp01 } from "./interpolation";
-
 export type SyncId = string | number;
 
 export type SyncByIdOptions<TItem extends { id: SyncId }, TTarget> = {
@@ -18,12 +16,13 @@ export type SyncByIdOptions<TItem extends { id: SyncId }, TTarget> = {
 export function computeInterpolationAlpha(
   elapsedMs: number,
   tickIntervalMs: number,
+  maxAlpha = 1.5,
 ): number {
   if (tickIntervalMs <= 0) {
-    return 1;
+    return maxAlpha;
   }
 
-  return clamp01(elapsedMs / tickIntervalMs);
+  return Math.max(0, Math.min(maxAlpha, elapsedMs / tickIntervalMs));
 }
 
 export function syncById<TItem extends { id: SyncId }, TTarget>(

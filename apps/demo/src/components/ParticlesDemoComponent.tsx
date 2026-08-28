@@ -6,6 +6,9 @@ import {
   SpriteSheetBundle,
 } from "@bkelly0/sprite-pulse";
 
+const FPS_EMA_ALPHA = 0.15;
+const FPS_UI_UPDATE_INTERVAL_MS = 500;
+
 class VelocitySprite extends Sprite {
   vx: number;
   vy: number;
@@ -33,6 +36,7 @@ export function ParticlesDemoComponent() {
   const intensityRef = useRef(intensity);
   const [numSprites, setNumSprites] = useState(0);
   const numSpritesRef = useRef(0);
+  const [renderFPS, setRenderFPS] = useState(0);
 
   useEffect(() => {
     intensityRef.current = intensity;
@@ -47,6 +51,8 @@ export function ParticlesDemoComponent() {
     let isDisposed = false;
     let uiUpdateFrameCount = 0;
     let sprites: VelocitySprite[] = [];
+    let renderDeltaEma = 0;
+    let lastRenderFpsUiUpdate = 0;
 
     const particleBundle = SpriteSheetBundle.fromImageFiles("particles", [
       "/images/particle1.png",
@@ -77,10 +83,22 @@ export function ParticlesDemoComponent() {
 
         setStatus("Running...");
         spritePulse.startLoop(
-          () => {
+          ({ timestamp, deltaMs }) => {
           if (isDisposed) {
             return;
           }
+
+            if (deltaMs > 0) {
+              renderDeltaEma =
+                renderDeltaEma === 0
+                  ? deltaMs
+                  : renderDeltaEma + FPS_EMA_ALPHA * (deltaMs - renderDeltaEma);
+
+              if (timestamp - lastRenderFpsUiUpdate >= FPS_UI_UPDATE_INTERVAL_MS) {
+                setRenderFPS(1000 / renderDeltaEma);
+                lastRenderFpsUiUpdate = timestamp;
+              }
+            }
 
             for (let i = 0; i < 40 * intensityRef.current; i++) {
               const texture = particleSheets[Math.floor(Math.random() * 6)];
@@ -154,6 +172,7 @@ export function ParticlesDemoComponent() {
     <section>
       <p>{status}</p>
       <canvas ref={canvasRef} width={800} height={600} />
+      <div>Render FPS: {renderFPS.toFixed(2)}</div>
       <div>Number of Sprites: {numSprites}</div>
       <label>
         Intensity

@@ -30,6 +30,7 @@ export {
   computeInterpolationAlpha,
   interpolatePoint,
   lerp,
+  lerpUnclamped,
   syncById,
   StateBuffer,
 } from "./utils";
