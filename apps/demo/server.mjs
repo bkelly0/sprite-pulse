@@ -10,7 +10,10 @@ const { loadEnvConfig } = nextEnv;
 
 loadEnvConfig(process.cwd());
 
-const demoLoaderOrigin = "https://sprite-pulse-demo-loader.bradfordkelly.com";
+const demoLoaderOrigins = new Set([
+  "https://sprite-pulse-demo-loader.bradfordkelly.com",
+  "http://sprite-pulse-demo-loader.bradfordkelly.com",
+]);
 
 function isEnabled(value) {
   if (typeof value !== "string") {
@@ -80,10 +83,10 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  if (req.headers.origin === demoLoaderOrigin) {
-    res.setHeader("Access-Control-Allow-Origin", demoLoaderOrigin);
-    res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-    res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  const origin = req.headers.origin;
+  if (req.url === "/" && origin && demoLoaderOrigins.has(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+    res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
     res.setHeader("Vary", "Origin");
   }
 
