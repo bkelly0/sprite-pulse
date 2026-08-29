@@ -117,7 +117,7 @@ export function ScrollingDemoComponent() {
 
   return (    
     <>
-        <p>{status}</p>
+        <p className="status-display">{status}</p>
         <canvas ref={canvasRef} width={800} height={600} />
     </>
   );

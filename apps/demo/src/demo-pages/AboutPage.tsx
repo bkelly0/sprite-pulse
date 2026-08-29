@@ -20,9 +20,15 @@ export function AboutPage() {
       </p>
     </section>
     <section className="github-links">
-      <div>
-        <i className="bi bi-github icon-left"></i><a href="https://github.com/bkelly0/sprite-pulse/" target="_blank">Sources</a>
-      </div>
+      <a
+        className="source-link"
+        href="https://github.com/bkelly0/sprite-pulse/"
+        target="_blank"
+        rel="noreferrer"
+      >
+        <i className="bi bi-github" aria-hidden="true"></i>
+        Sources
+      </a>
     </section>
     </>
   );

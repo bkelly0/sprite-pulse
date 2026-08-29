@@ -61,7 +61,7 @@ export function BackendQuadTreeDemoPage({ title }: DemoPageProps) {
     <>
     <section>
       <h1>{title}</h1>
-      <p>{status}</p>
+      <p className="status-display">{status}</p>
       {gameId && (
         <BackendQuadTreeDemoComponent gameId={gameId} onStatusChange={setStatus}/>
       )}

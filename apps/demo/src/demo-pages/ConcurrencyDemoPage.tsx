@@ -61,7 +61,7 @@ export function ConcurrencyDemoPage({ title }: DemoPageProps) {
     <>
     <section>
       <h1>{title}</h1>
-      <p>{status}</p>
+      <p className="status-display">{status}</p>
 
       <div className="concurrency-canvas-grid">
         {gameId

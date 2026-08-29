@@ -170,10 +170,10 @@ export function ParticlesDemoComponent() {
 
   return (
     <section>
-      <p>{status}</p>
+      <p className="status-display">{status}</p>
       <canvas ref={canvasRef} width={800} height={600} />
-      <div>Render FPS: {renderFPS.toFixed(2)}</div>
-      <div>Number of Sprites: {numSprites}</div>
+      <div className="status-display">Render FPS: {renderFPS.toFixed(2)}</div>
+      <div className="status-display">Number of Sprites: {numSprites}</div>
       <label>
         Intensity
         <input

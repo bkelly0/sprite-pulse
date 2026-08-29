@@ -191,7 +191,7 @@ export function SpriteSheetDemoComponent() {
   return (
     <>
       <section>
-        <p>{status}</p>
+        <p className="status-display">{status}</p>
         <canvas ref={canvasRef} width={800} height={600} />
       </section>
     </>

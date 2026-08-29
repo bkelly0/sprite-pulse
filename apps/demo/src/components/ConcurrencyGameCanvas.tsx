@@ -319,8 +319,8 @@ export function ConcurrencyGameCanvas({
 
   return <div>
       <div ref={containerRef} />
-      <div>Connection ID: {connectionId ?? "Connecting..."}</div>
-      <div>Render FPS: {renderFPSState.toFixed(2)}</div>  
-      <div>State update FPS: {stateFPSState.toFixed(2)}</div>
+      <div className="status-display">Connection ID: {connectionId ?? "Connecting..."}</div>
+      <div className="status-display">Render FPS: {renderFPSState.toFixed(2)}</div>
+      <div className="status-display">State update FPS: {stateFPSState.toFixed(2)}</div>
     </div>;
 }
