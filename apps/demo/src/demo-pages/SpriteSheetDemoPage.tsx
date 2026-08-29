@@ -9,16 +9,16 @@ export function SpriteSheetDemoPage() {
       <section>
         <h2>Overview</h2>
         <p>
-          This demo showcases frame-by-frame animation using a sprite sheet. It
+          This demos Sprite-Pulse's frame-by-frame animation capability using a sprite sheet. It
           defines a set of frame rectangles within a single source image and
           plays them in sequence to animate each character sprite while the
           sprites move across the canvas.
         </p>
-        <h3>How Frame-by-Frame Animation Works Here</h3>
+        <h3>How Frame-by-Frame Animation Is Handled</h3>
         <ul>
           
           <li>
-            The demo creates frame regions (Rect values) that map to individual
+            Frame regions (Rect values) are created that map to individual
             poses in the sheet.
           </li>
           <li>
@@ -34,7 +34,7 @@ export function SpriteSheetDemoPage() {
             sampled each frame.
           </li>
         </ul>
-        <h3>What This Demonstrates</h3>
+        <h3>Results</h3>
         <ul>
           <li>
             Consistent animation playback using timed frame sequences.
@@ -46,10 +46,6 @@ export function SpriteSheetDemoPage() {
           <li>
             Independent per-sprite motion combined with shared animation
             definitions.
-          </li>
-          <li>
-            Layered rendering where animated characters draw over a static tile
-            background.
           </li>
         </ul>
       </section>

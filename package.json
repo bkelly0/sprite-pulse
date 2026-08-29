@@ -8,7 +8,7 @@
   ],
   "scripts": {
     "build": "npm run build -w sprite-pulse",
-    "dev": "npm run dev -w sprite-pulse",
+    "dev": "npm run dev -w demo",
     "playground": "npm run dev -w playground",
     "build:all": "npm run build -ws",
     "format": "prettier . --write",

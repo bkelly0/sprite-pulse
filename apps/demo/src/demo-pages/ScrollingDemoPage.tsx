@@ -10,7 +10,7 @@ export function ScrollingDemoPage() {
         <ScrollingDemoComponent />
       </section>
       <section>
-        <h2>Scrolling Demo Overview</h2>{" "}
+        <h2>Overview</h2>{" "}
         <p>
           This demo shows camera-based world scrolling with layered sprites.
           Instead of moving every sprite each frame, it moves a camera across a

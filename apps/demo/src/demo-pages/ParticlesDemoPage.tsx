@@ -9,21 +9,15 @@ export function ParticlesDemoPage() {
     <section>
         <h2>Overview</h2>
         <p>
-          This is a stress-style particle renderer. On each animation
-          frame, it spawns new sprites from the center of the canvas, gives each
-          sprite randomized velocity and size, applies gravity, and removes
-          sprites once they fall off-screen.
-        </p>
-        <p>
-          The intensity slider changes how many particles are spawned per frame,
+          This is a stress-style particle renderer. The intensity slider changes how many particles are spawned per frame,
           so the scene can scale from a light effect to thousands of active
-          sprites. This makes it a practical way to demonstrate drawing many
+          sprites. This is to demonstrate drawing many
           sprites continuously in real time.
         </p>
-        <h3>High Sprite Throughput</h3>
+        <h3>High Sprite Throughput and Efficiency</h3>
         <ul>
           <li>
-            New particles are created every frame instead of a one-time burst.
+            New particles are created every frame.
           </li>
           <li>
             Existing particles are updated every frame with physics-like motion.
@@ -31,10 +25,9 @@ export function ParticlesDemoPage() {
           <li>
             The full active sprite list is re-rendered each frame.
           </li>
-        </ul>
-        <h3>Efficiency</h3>
-        <ul>
-          <li>It uses WebGL2 so drawing work is handled by the GPU.</li>
+          <li>
+            It uses WebGL2 so drawing work is handled by the GPU.
+          </li>
           <li>
             It reuses shared geometry and shader programs rather than rebuilding
             render data each frame.
