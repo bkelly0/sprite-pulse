@@ -2,8 +2,8 @@
 
 :root {
   color-scheme: dark;
-  font-family: "Trebuchet MS", "Lucida Sans Unicode", "Lucida Grande", Verdana,
-    sans-serif;
+  font-family: "Fira Sans", sans-serif;
+  font-style: normal;
   line-height: 1.25;
   --bg-base: #161a1a;
   --bg-glow-a: rgba(148, 176, 218, 0.1);
@@ -22,10 +22,29 @@
 body {
   margin: 0;
   color: var(--text-main);
+  font-size: .95rem;
   background:
     radial-gradient(960px 680px at 8% -12%, var(--bg-glow-a), transparent 60%),
     radial-gradient(920px 620px at 96% -18%, var(--bg-glow-b), transparent 64%),
     linear-gradient(180deg, #252b2b 0%, var(--bg-base) 52%, #090b0b 100%);
+}
+
+.fira-sans-regular {
+  font-family: "Fira Sans", sans-serif;
+  font-weight: 400;
+  font-style: normal;
+}
+
+.fira-sans-semibold {
+  font-family: "Fira Sans", sans-serif;
+  font-weight: 600;
+  font-style: normal;
+}
+
+.fira-sans-light-italic {
+  font-family: "Fira Sans", sans-serif;
+  font-weight: 300;
+  font-style: italic;
 }
 
 main {
@@ -44,6 +63,10 @@ h1 {
   margin-top: 0;
   color: var(--text-main);
   letter-spacing: 0.02em;
+}
+
+.demo-title {
+  font-family: "Zen Dots", sans-serif;
 }
 
 h3, h2, ul {
