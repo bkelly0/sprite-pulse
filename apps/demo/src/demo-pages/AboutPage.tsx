@@ -15,8 +15,9 @@ export function AboutPage() {
         engine, I developed Sprite-Pulse to explore state interpolation algorithms
         and isolate state rendering from application logic.
       </p>
-      <p>
-        Note: Backend state demos are configured to have concurrency limits and game states expire to keep the resource cost down.
+      <p className="note">
+        <i className="bi bi-info-circle-fill icon-left" aria-hidden="true"></i>
+        Note: Backend state demos are configured to have concurrency limits and game states expire to keep the resource cost down. In addition, all service scale to zero.
       </p>
     </section>
     <section className="github-links">
